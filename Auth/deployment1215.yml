@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: mab3825/final:auth
+          ports:
+            - containerPort: 4000
+          env:
+            - name: MONGO_URL
+              value: mongodb://mongodatabase:27017/
+            - name: EVENT_URL
+              value: http://event-bus:4009

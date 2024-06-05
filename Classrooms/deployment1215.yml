@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: class-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: class
+  template:
+    metadata:
+      labels:
+        app: class
+    spec:
+      containers:
+        - name: class
+          image: mab3825/final:class
+          ports:
+            - containerPort: 4001
+          env:
+            - name: MONGO_URL
+              value: mongodb://mongodatabase:27017/
+            - name: EVENT_URL
+              value: http://event-bus:4009

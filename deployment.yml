@@ -1,0 +1,246 @@
+# Episode 1
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodatabase
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodatabase
+  template:
+    metadata:
+      labels:
+        app: mongodatabase
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:latest
+        volumeMounts:
+        - name: mongo-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: mongo-pvc-db
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodatabase
+  namespace: prod
+spec:
+  selector:
+    app: mongodatabase
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: mab3825/final:auth
+          ports:
+            - containerPort: 4000
+          env:
+            - name: MONGO_URL
+              value: mongodb://mongodatabase:27017/
+            - name: EVENT_URL
+              value: http://event-bus:4009
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  namespace: prod
+spec:
+  selector:
+    app: auth
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+  type: NodePort
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: class-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: class
+  template:
+    metadata:
+      labels:
+        app: class
+    spec:
+      containers:
+        - name: class
+          image: mab3825/final:class
+          ports:
+            - containerPort: 4001
+          env:
+            - name: MONGO_URL
+              value: mongodb://mongodatabase:27017/
+            - name: EVENT_URL
+              value: http://event-bus:4009
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: class
+  namespace: prod
+spec:
+  selector:
+    app: class
+  ports:
+    - protocol: TCP
+      port: 4001
+      targetPort: 4001
+  type: NodePort
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-bus
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-bus
+  template:
+    metadata:
+      labels:
+        app: event-bus
+    spec:
+      containers:
+        - name: event-bus
+          image: mab3825/final:event-bus
+          ports:
+            - containerPort: 4009
+          env:
+            - name: MONGO_URL
+              value: mongodb://mongodatabase:27017/
+            - name: AUTH_URL
+              value: http://auth:4000
+            - name: CLASS_URL
+              value: http://class:4001
+            - name: POST_URL
+              value: http://post:4000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-bus
+  namespace: prod
+spec:
+  selector:
+    app: event-bus
+  ports:
+    - protocol: TCP
+      port: 4009
+      targetPort: 4009
+  type: NodePort
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: post-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: post
+  template:
+    metadata:
+      labels:
+        app: post
+    spec:
+      containers:
+        - name: post
+          image: mab3825/final:post
+          ports:
+            - containerPort: 4002
+          env:
+            - name: MONGO_URL
+              value: mongodb://mongodatabase:27017/
+            - name: EVENT_URL
+              value: http://event-bus:4009
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: post
+  namespace: prod
+spec:
+  selector:
+    app: post
+  ports:
+    - protocol: TCP
+      port: 4002
+      targetPort: 4002
+  type: NodePort
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+        - name: client
+          image: mab3825/final:client
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: client
+  namespace: prod
+spec:
+  selector:
+    app: client
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: NodePort
+---

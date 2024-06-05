@@ -28,7 +28,7 @@ pipeline {
                         def appName = appNames[i]
                         def imageName = imageNames[i]
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            bat "docker build -t %DOCKER_USERNAME%/final/${imageName} ./${appName}"
+                            bat "docker build -t %DOCKER_USERNAME%/final:${imageName} ./${appName}"
                         }
                     }
                 }
@@ -42,7 +42,7 @@ pipeline {
                     for (def i = 0; i < appNames.size(); i++) {
                         def appName = imageNames[i]
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            bat "docker run -d %DOCKER_USERNAME%/final/${appName}"
+                            bat "docker run -d %DOCKER_USERNAME%/final:${appName}"
                         }
                     }
                 }
@@ -58,7 +58,7 @@ pipeline {
                         def appName = imageNames[i]
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                             bat 'docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%'
-                            bat "docker push %DOCKER_USERNAME%/final/${appName}"
+                            bat "docker push %DOCKER_USERNAME%/final:${appName}"
                         }
                     }
                 }

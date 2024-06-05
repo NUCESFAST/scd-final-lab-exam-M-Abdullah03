@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-bus
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-bus
+  template:
+    metadata:
+      labels:
+        app: event-bus
+    spec:
+      containers:
+        - name: event-bus
+          image: mab3825/final:event-bus
+          ports:
+            - containerPort: 4009
+          env:
+            - name: MONGO_URL
+              value: mongodb://mongodatabase:27017/
+            - name: AUTH_URL
+              value: http://auth:4000
+            - name: CLASS_URL
+              value: http://class:4001
+            - name: POST_URL
+              value: http://post:4000
