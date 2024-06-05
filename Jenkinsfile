@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout i211215') {
             steps {
-                git 'https://github.com/M-Abdullah03/simple-reactjs-app.git'
+                git 'https://github.com/NUCESFAST/scd-final-lab-exam-M-Abdullah03'
             }
         }
 
