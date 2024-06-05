@@ -3,6 +3,10 @@ kind: Deployment
 metadata:
   name: auth-deployment
   namespace: prod
+  labels:
+    app: auth
+  annotations:
+    example.com/annotation-1: "value-1"
 spec:
   replicas: 1
   selector:
@@ -18,6 +22,26 @@ spec:
           image: mab3825/final:auth
           ports:
             - containerPort: 4000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: "200m"
+              memory: "200Mi"
+          # Since we dont have any routes for health and readiness probes, we will comment them out
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 4000
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 4000
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
           env:
             - name: MONGO_URL
               value: mongodb://mongodatabase:27017/
