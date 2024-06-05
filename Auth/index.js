@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
-var url = 'mongodb://localhost:27017/';
+var url = process.env.MONGO_URL;
 
 app.post('/signup', async (req, res) => {
     const id = randomBytes(4).toString('hex');
@@ -34,7 +34,7 @@ app.post('/signup', async (req, res) => {
         });
     });
 
-    await axios.post('http://localhost:4009/events', {
+    await axios.post(`${process.env.EVENT_URL}/events`, {
         type: 'UserCreated',
         data: {
             id, email
@@ -42,7 +42,7 @@ app.post('/signup', async (req, res) => {
     });
 
     res.status(201).send('User signed up');
-    
+
 })
 
 app.post('/login', (req, response) => {
@@ -54,10 +54,10 @@ app.post('/login', (req, response) => {
 
         dbo.collection('auth').find({ email: email }).toArray((err, res) => {
             if (err) throw err;
-            
+
             if (res.length == 0) {
                 response.status(401).send({});
-            } 
+            }
 
             if (email == res[0].email && password == res[0].password) {
                 response.status(200).send(res[0].id)

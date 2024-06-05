@@ -10,23 +10,24 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
+let users = {};
 
-var url = 'mongodb://localhost:27017/';
+var url = process.env.MONGO_URL;
 
 app.post('/create_class', async (req, res) => {
     const classId = randomBytes(3).toString('hex');
     const { userId, title } = req.body;
-    const newClass = { id: classId, data: { classId: classId, title: title }}
+    const newClass = { id: classId, data: { classId: classId, title: title } }
 
     await MongoClient.connect(url, (err, db) => {
         if (err) throw err;
         var dbo = db.db('ClassroomMS');
 
         dbo.collection('user').updateOne(
-            { 'id': userId }, 
+            { 'id': userId },
             { $push: { 'class_list': classId } }
         );
-
+        console.log('Class added to user');
         db.close();
     });
 
@@ -41,7 +42,7 @@ app.post('/create_class', async (req, res) => {
         db.close();
     });
 
-    await axios.post('http://localhost:4009/events', {
+    await axios.post(`${process.env.EVENT_URL}/events`, {
         type: 'ClassCreated',
         data: classId
     });
@@ -50,7 +51,7 @@ app.post('/create_class', async (req, res) => {
 });
 
 app.post('/add_class', async (req, res) => {
-    const {userId, classId} = req.body;
+    const { userId, classId } = req.body;
 
     await MongoClient.connect(url, (err, db) => {
         if (err) throw err;
@@ -77,14 +78,16 @@ app.get('/get_classes/:id', async (req, response) => {
 
         dbo.collection('user').find({ id: userId }).toArray((err, res) => {
             if (err) throw err;
-            const n = res[0].class_list.length;
+            let n = res[0]?.class_list?.length;
+            // if (n == 0 || !n) return
+            // response.status(200).send({ data: [] });
 
             res[0].class_list.forEach((item, index) => {
                 resolvePromise(dbo, item).then(resp => {
                     resClassList.push(resp[0].data);
 
                     if (resClassList.length == n) {
-                        response.status(200).send({data: resClassList});
+                        response.status(200).send({ data: resClassList });
                     }
                 });
             });
@@ -109,9 +112,9 @@ app.post('/events', async (req, res) => {
             if (err) throw err;
             var dbo = db.db('ClassroomMS');
 
-            dbo.collection('user').insertOne({id: data.id, class_list: []}, (err, res) => {
+            dbo.collection('user').insertOne({ id: data.id, class_list: [] }, (err, res) => {
                 if (err) throw err;
-                db.close();                
+                db.close();
             });
         });
     }

@@ -10,13 +10,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
-var url = 'mongodb://localhost:27017'
+var url = process.env.MONGO_URL;
 
 app.post('/create_post', async (req, res) => {
     const id = randomBytes(6).toString('hex');
     const { classId, postTitle } = req.body;
     const newPost = { id: id, title: postTitle, comments: [] }
-    
+
     await MongoClient.connect(url, (err, db) => {
         if (err) throw err;
         var dbo = db.db('ClassroomMS');
@@ -29,7 +29,7 @@ app.post('/create_post', async (req, res) => {
         db.close();
     });
 
-    await axios.post('http://localhost:4009/events', {
+    await axios.post(`${process.env.EVENT_URL}/events`, {
         type: 'PostCreated',
         data: 'postid'
     });
@@ -42,7 +42,7 @@ app.post('/create_post', async (req, res) => {
             if (err) throw err;
             res.status(200).send(resp.data);
         });
-        
+
         db.close();
     });
 })
@@ -56,8 +56,8 @@ app.post('/add_comment', async (req, res) => {
 
         dbo.collection('posts').updateOne(
             { 'classId': data.class, 'data.id': data.id },
-            { '$push': 
-                { 'data.$.comments': data.text } 
+            { '$push':
+                { 'data.$.comments': data.text }
             }
         );
 
