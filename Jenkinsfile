@@ -4,13 +4,19 @@ pipeline {
     stages {
         stage('Checkout i211215') {
             steps {
-                git 'https://github.com/NUCESFAST/scd-final-lab-exam-M-Abdullah03'
+                git 'https://github.com/NUCESFAST/scd-final-lab-exam-M-Abdullah03.git'
             }
         }
 
         stage('Install Dependencies i211215') {
             steps {
-                bat 'npm install'
+                script {
+                    def appNames = ['Auth', 'Classrooms', 'client', 'event-bus', 'Post']
+                    for (def i = 0; i < appNames.size(); i++) {
+                        def appName = appNames[i]
+                        bat "cd ${appName} && npm install"
+                    }
+                }
             }
         }
         stage('Build Docker Images i211215') {
